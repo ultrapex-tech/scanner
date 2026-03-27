@@ -1,24 +1,195 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
   <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TCD Scanner App</title>
     <style>
-      body { font-family: Arial, sans-serif; padding: 20px; max-width: 400px; margin: auto; background-color: #f4f4f9;}
-      .container { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
-      button { padding: 10px 15px; background-color: #4CAF50; color: white; border: none; cursor: pointer; margin-top: 10px; width: 100%; border-radius: 5px; font-weight: bold;}
-      button:disabled { background-color: #cccccc; cursor: not-allowed;}
-      #downloadBtn { background-color: #2196F3; display: none; margin-top: 10px;}
-      #status { margin-top: 15px; font-weight: bold; color: #333; text-align: center; font-size: 14px;}
-      .warning { font-size: 12px; color: #d32f2f; margin-bottom: 15px; text-align: center;}
+      :root {
+        --primary: #4F46E5; /* Indigo/Blue */
+        --primary-hover: #4338CA;
+        --secondary: #10B981; /* Emerald Green */
+        --secondary-hover: #059669;
+        --bg-color: #F3F4F6;
+        --card-bg: #FFFFFF;
+        --text-main: #1F2937;
+        --text-muted: #6B7280;
+        --danger-bg: #FEF2F2;
+        --danger-text: #DC2626;
+        --border-color: #E5E7EB;
+      }
+
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        background-color: var(--bg-color);
+        color: var(--text-main);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+        padding: 20px;
+      }
+
+      .container {
+        background: var(--card-bg);
+        width: 100%;
+        max-width: 420px;
+        padding: 32px 24px;
+        border-radius: 16px;
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+      }
+
+      h2 {
+        text-align: center;
+        font-size: 24px;
+        font-weight: 700;
+        margin-bottom: 20px;
+        color: var(--text-main);
+      }
+
+      .warning {
+        background-color: var(--danger-bg);
+        color: var(--danger-text);
+        font-size: 13px;
+        padding: 12px;
+        border-radius: 8px;
+        margin-bottom: 24px;
+        text-align: center;
+        font-weight: 500;
+        border: 1px solid #FCA5A5;
+      }
+
+      /* Custom File Upload Styling */
+      .file-upload-wrapper {
+        position: relative;
+        margin-bottom: 24px;
+      }
+
+      .file-upload-label {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 32px 20px;
+        border: 2px dashed var(--border-color);
+        border-radius: 12px;
+        cursor: pointer;
+        background-color: #F9FAFB;
+        transition: all 0.2s ease;
+      }
+
+      .file-upload-label:hover {
+        background-color: #F3F4F6;
+        border-color: var(--primary);
+      }
+
+      .file-upload-label svg {
+        width: 40px;
+        height: 40px;
+        color: var(--text-muted);
+        margin-bottom: 12px;
+      }
+
+      .file-upload-text {
+        font-size: 14px;
+        color: var(--text-muted);
+        text-align: center;
+      }
+
+      .file-upload-text strong {
+        color: var(--primary);
+      }
+
+      input[type="file"] {
+        display: none; /* Hide standard ugly input */
+      }
+
+      #fileNameDisplay {
+        margin-top: 8px;
+        font-size: 13px;
+        color: var(--primary);
+        text-align: center;
+        font-weight: 600;
+        word-break: break-all;
+        min-height: 20px;
+      }
+
+      /* Buttons */
+      button {
+        width: 100%;
+        padding: 14px;
+        font-size: 16px;
+        font-weight: 600;
+        color: white;
+        background-color: var(--primary);
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: background-color 0.2s ease, transform 0.1s ease;
+      }
+
+      button:hover:not(:disabled) {
+        background-color: var(--primary-hover);
+      }
+
+      button:active:not(:disabled) {
+        transform: scale(0.98);
+      }
+
+      button:disabled {
+        background-color: #9CA3AF;
+        cursor: not-allowed;
+      }
+
+      #downloadBtn {
+        background-color: var(--secondary);
+        margin-top: 12px;
+        display: none;
+      }
+
+      #downloadBtn:hover {
+        background-color: var(--secondary-hover);
+      }
+
+      /* Status Area */
+      #status {
+        margin-top: 16px;
+        font-size: 14px;
+        text-align: center;
+        font-weight: 500;
+        min-height: 20px;
+        color: var(--text-muted);
+      }
+
+      .status-success { color: var(--secondary) !important; }
+      .status-error { color: var(--danger-text) !important; }
+
     </style>
   </head>
   <body>
     <div class="container">
-      <h2 style="text-align: center; margin-top: 0;">TCD Data Scanner</h2>
+      <h2>TCD Scanner</h2>
       <div class="warning">⚠️ Ensure all Patient PII is cropped out before uploading.</div>
       
-      <input type="file" id="imageInput" accept="image/png, image/jpeg" style="margin-bottom: 10px;">
+      <div class="file-upload-wrapper">
+        <label for="imageInput" class="file-upload-label">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path>
+          </svg>
+          <div class="file-upload-text">
+            <strong>Tap to select</strong> or drag image here
+          </div>
+        </label>
+        <input type="file" id="imageInput" accept="image/png, image/jpeg" onchange="updateFileName()">
+        <div id="fileNameDisplay"></div>
+      </div>
+
       <button id="uploadBtn" onclick="uploadImage()">Scan and Extract Data</button>
       <div id="status"></div>
       
@@ -26,10 +197,28 @@
     </div>
 
     <script>
-      // *** PASTE YOUR GOOGLE APPS SCRIPT WEB APP URL HERE ***
+      // Your Apps Script URL
       const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxvcxPp0i0dmF3U6tqNxfoa_qvCu1KRhaRGu0CLEjCSjQ6pSgwgqwDbXOcCDWmncj7y3w/exec';
 
       let currentJsonData = "";
+
+      // Function to show the file name when selected
+      function updateFileName() {
+        const fileInput = document.getElementById('imageInput');
+        const fileNameDisplay = document.getElementById('fileNameDisplay');
+        const statusDiv = document.getElementById('status');
+        
+        // Reset status
+        statusDiv.innerText = "";
+        statusDiv.className = "";
+        document.getElementById('downloadBtn').style.display = 'none';
+
+        if (fileInput.files.length > 0) {
+          fileNameDisplay.innerText = "Selected: " + fileInput.files[0].name;
+        } else {
+          fileNameDisplay.innerText = "";
+        }
+      }
 
       function uploadImage() {
         const fileInput = document.getElementById('imageInput');
@@ -39,11 +228,7 @@
 
         if (fileInput.files.length === 0) {
           statusDiv.innerText = "Please select an image first.";
-          return;
-        }
-
-        if (GAS_WEB_APP_URL === 'YOUR_WEB_APP_URL_HERE') {
-          statusDiv.innerText = "Developer Error: Please paste your Web App URL into the HTML code.";
+          statusDiv.className = "status-error";
           return;
         }
 
@@ -51,6 +236,7 @@
         const reader = new FileReader();
 
         statusDiv.innerText = "Scanning... This usually takes 5-10 seconds.";
+        statusDiv.className = "";
         btn.disabled = true;
         downloadBtn.style.display = 'none';
 
@@ -59,11 +245,10 @@
           const mimeType = file.type;
 
           try {
-            // Send the image to your Google Apps Script backend
             const response = await fetch(GAS_WEB_APP_URL, {
               method: 'POST',
               headers: {
-                'Content-Type': 'text/plain;charset=utf-8', // Prevents CORS preflight errors
+                'Content-Type': 'text/plain;charset=utf-8',
               },
               body: JSON.stringify({ base64: base64Data, mimeType: mimeType })
             });
@@ -71,14 +256,18 @@
             const result = await response.json();
 
             if (result.status === 'success') {
-              statusDiv.innerText = "Success! Data saved to Sheet.";
-              currentJsonData = result.data;
+              // Now showing the extracted HN Number on success
+              statusDiv.innerText = "Success! Saved HN: " + (result.hnNumber || "Unknown");
+              statusDiv.className = "status-success";
+              currentJsonData = JSON.stringify(result.data, null, 2);
               downloadBtn.style.display = 'block';
             } else {
               statusDiv.innerText = "Error: " + result.message;
+              statusDiv.className = "status-error";
             }
           } catch (error) {
-            statusDiv.innerText = "Network Error: Make sure your Web App URL is correct.";
+            statusDiv.innerText = "Network Error: Could not connect to server.";
+            statusDiv.className = "status-error";
           } finally {
             btn.disabled = false;
           }
