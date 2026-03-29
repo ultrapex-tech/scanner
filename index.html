@@ -3,12 +3,13 @@
   <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TCD Scanner App</title>
+    <title>UltraFlow TCD Portal</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
       :root {
-        --primary: #4F46E5; /* Indigo/Blue */
+        --primary: #4F46E5;
         --primary-hover: #4338CA;
-        --secondary: #10B981; /* Emerald Green */
+        --secondary: #10B981;
         --secondary-hover: #059669;
         --bg-color: #F3F4F6;
         --card-bg: #FFFFFF;
@@ -19,14 +20,10 @@
         --border-color: #E5E7EB;
       }
 
-      * {
-        box-sizing: border-box;
-        margin: 0;
-        padding: 0;
-      }
+      * { box-sizing: border-box; margin: 0; padding: 0; }
 
       body {
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
         background-color: var(--bg-color);
         color: var(--text-main);
         display: flex;
@@ -39,179 +36,304 @@
       .container {
         background: var(--card-bg);
         width: 100%;
-        max-width: 420px;
+        max-width: 500px;
         padding: 32px 24px;
         border-radius: 16px;
-        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
       }
 
-      h2 {
-        text-align: center;
-        font-size: 24px;
-        font-weight: 700;
-        margin-bottom: 20px;
-        color: var(--text-main);
+      /* View Management */
+      .view { display: none; }
+      .view.active { display: block; }
+
+      h2 { text-align: center; margin-bottom: 20px; color: var(--text-main); }
+
+      /* Form Elements */
+      .input-group { margin-bottom: 16px; }
+      .input-group label { display: block; margin-bottom: 6px; font-size: 14px; font-weight: 500; }
+      .input-group input, .input-group select {
+        width: 100%; padding: 10px; border: 1px solid var(--border-color);
+        border-radius: 6px; font-size: 14px;
       }
 
+      button {
+        width: 100%; padding: 12px; font-size: 16px; font-weight: 600;
+        color: white; background-color: var(--primary); border: none;
+        border-radius: 8px; cursor: pointer; transition: 0.2s;
+        margin-top: 10px;
+      }
+      button:hover:not(:disabled) { background-color: var(--primary-hover); }
+      button:disabled { background-color: #9CA3AF; cursor: not-allowed; }
+      
+      .link-btn {
+        background: none; color: var(--primary); width: auto; padding: 0;
+        font-size: 14px; margin: 10px 0 0 0; text-decoration: underline; font-weight: normal;
+      }
+      .link-btn:hover:not(:disabled) { background: none; color: var(--primary-hover); }
+
+      .links-row { display: flex; justify-content: space-between; margin-top: 16px; }
+
+      /* Scanner Specifics */
       .warning {
-        background-color: var(--danger-bg);
-        color: var(--danger-text);
-        font-size: 13px;
-        padding: 12px;
-        border-radius: 8px;
-        margin-bottom: 24px;
-        text-align: center;
-        font-weight: 500;
-        border: 1px solid #FCA5A5;
-      }
-
-      /* Custom File Upload Styling */
-      .file-upload-wrapper {
-        position: relative;
-        margin-bottom: 24px;
+        background-color: var(--danger-bg); color: var(--danger-text);
+        font-size: 13px; padding: 12px; border-radius: 8px; margin-bottom: 24px;
+        text-align: center; border: 1px solid #FCA5A5;
       }
 
       .file-upload-label {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        padding: 32px 20px;
-        border: 2px dashed var(--border-color);
-        border-radius: 12px;
-        cursor: pointer;
-        background-color: #F9FAFB;
-        transition: all 0.2s ease;
+        display: flex; flex-direction: column; align-items: center; padding: 32px 20px;
+        border: 2px dashed var(--border-color); border-radius: 12px; cursor: pointer;
+        background-color: #F9FAFB; margin-bottom: 15px;
+      }
+      .file-upload-label:hover { border-color: var(--primary); }
+      input[type="file"] { display: none; }
+
+      .action-row {
+        display: flex; justify-content: space-between; align-items: center; margin-top: 15px;
       }
 
-      .file-upload-label:hover {
-        background-color: #F3F4F6;
-        border-color: var(--primary);
+      /* Icon Button for Download */
+      .icon-btn {
+        background: none; border: none; color: var(--primary); cursor: pointer;
+        padding: 8px; width: auto; display: none;
       }
+      .icon-btn:hover:not(:disabled) { background-color: #E0E7FF; border-radius: 50%; }
+      .icon-btn svg { width: 24px; height: 24px; }
 
-      .file-upload-label svg {
-        width: 40px;
-        height: 40px;
-        color: var(--text-muted);
-        margin-bottom: 12px;
-      }
-
-      .file-upload-text {
-        font-size: 14px;
-        color: var(--text-muted);
-        text-align: center;
-      }
-
-      .file-upload-text strong {
-        color: var(--primary);
-      }
-
-      input[type="file"] {
-        display: none; /* Hide standard ugly input */
-      }
-
-      #fileNameDisplay {
-        margin-top: 8px;
-        font-size: 13px;
-        color: var(--primary);
-        text-align: center;
-        font-weight: 600;
-        word-break: break-all;
-        min-height: 20px;
-      }
-
-      /* Buttons */
-      button {
-        width: 100%;
-        padding: 14px;
-        font-size: 16px;
-        font-weight: 600;
-        color: white;
-        background-color: var(--primary);
-        border: none;
-        border-radius: 8px;
-        cursor: pointer;
-        transition: background-color 0.2s ease, transform 0.1s ease;
-      }
-
-      button:hover:not(:disabled) {
-        background-color: var(--primary-hover);
-      }
-
-      button:active:not(:disabled) {
-        transform: scale(0.98);
-      }
-
-      button:disabled {
-        background-color: #9CA3AF;
-        cursor: not-allowed;
-      }
-
-      #downloadBtn {
-        background-color: var(--secondary);
-        margin-top: 12px;
-        display: none;
-      }
-
-      #downloadBtn:hover {
-        background-color: var(--secondary-hover);
-      }
-
-      /* Status Area */
-      #status {
-        margin-top: 16px;
-        font-size: 14px;
-        text-align: center;
-        font-weight: 500;
-        min-height: 20px;
-        color: var(--text-muted);
-      }
-
+      #status { margin-top: 16px; font-size: 14px; text-align: center; font-weight: 500; min-height: 20px; }
       .status-success { color: var(--secondary) !important; }
       .status-error { color: var(--danger-text) !important; }
 
+      /* Chart Container */
+      .chart-container {
+        margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--border-color); display: none;
+      }
     </style>
   </head>
   <body>
+
     <div class="container">
-      <h2>TCD Scanner</h2>
-      <div class="warning">⚠️ Ensure all Patient PII is cropped out before uploading.</div>
       
-      <div class="file-upload-wrapper">
-        <label for="imageInput" class="file-upload-label">
-          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path>
-          </svg>
-          <div class="file-upload-text">
-            <strong>Tap to select</strong> or drag image here
-          </div>
-        </label>
-        <input type="file" id="imageInput" accept="image/png, image/jpeg" onchange="updateFileName()">
-        <div id="fileNameDisplay"></div>
+      <div id="loginView" class="view active">
+        <h2>UltraFlow Login</h2>
+        <div class="input-group">
+          <label>Username or Email</label>
+          <input type="text" id="loginUser">
+        </div>
+        <div class="input-group">
+          <label>Password</label>
+          <input type="password" id="loginPass">
+        </div>
+        <div class="input-group">
+          <label>Domain / Hospital</label>
+          <input type="text" id="loginDomain" value="Default" placeholder="e.g., General Hospital">
+        </div>
+        <button id="btnLogin" onclick="handleLogin()">Login</button>
+        <div id="loginStatus" style="color: red; margin-top: 10px; font-size: 14px; text-align: center;"></div>
+        
+        <div class="links-row">
+          <button class="link-btn" onclick="switchView('resetView')">Forgot Password?</button>
+          <button class="link-btn" onclick="switchView('registerView')">Create Account</button>
+        </div>
       </div>
 
-      <button id="uploadBtn" onclick="uploadImage()">Scan and Extract Data</button>
-      <div id="status"></div>
-      
-      <button id="downloadBtn" onclick="downloadJSON()">Download JSON File</button>
+      <div id="registerView" class="view">
+        <h2>Create Account</h2>
+        <div id="regStep1">
+          <div class="input-group"><label>Full Name</label><input type="text" id="regName"></div>
+          <div class="input-group"><label>Username</label><input type="text" id="regUser"></div>
+          <div class="input-group"><label>Email</label><input type="email" id="regEmail"></div>
+          <div class="input-group"><label>Password</label><input type="password" id="regPass"></div>
+          <div class="input-group"><label>Domain</label><input type="text" id="regDomain" value="Default"></div>
+          <button onclick="handleRegisterInitiate()">Send Verification Code</button>
+        </div>
+        
+        <div id="regStep2" style="display: none;">
+          <div class="input-group"><label>Enter 6-digit OTP sent to email</label><input type="text" id="regOtp"></div>
+          <button onclick="handleRegisterComplete()">Verify & Complete</button>
+        </div>
+
+        <div id="regStatus" style="color: var(--primary); margin-top: 10px; font-size: 14px; text-align: center;"></div>
+        <button class="link-btn" style="display:block; width:100%; text-align:center; margin-top:20px;" onclick="switchView('loginView')">Back to Login</button>
+      </div>
+
+      <div id="resetView" class="view">
+        <h2>Reset Password</h2>
+        <div id="resStep1">
+          <div class="input-group"><label>Registered Email</label><input type="email" id="resEmail"></div>
+          <button onclick="handleSendReset()">Send Reset Code</button>
+        </div>
+
+        <div id="resStep2" style="display: none;">
+          <div class="input-group"><label>4-digit Code</label><input type="text" id="resCode"></div>
+          <div class="input-group"><label>New Password</label><input type="password" id="resPass"></div>
+          <button onclick="handleResetComplete()">Update Password</button>
+        </div>
+        
+        <div id="resStatus" style="color: var(--primary); margin-top: 10px; font-size: 14px; text-align: center;"></div>
+        <button class="link-btn" style="display:block; width:100%; text-align:center; margin-top:20px;" onclick="switchView('loginView')">Back to Login</button>
+      </div>
+
+      <div id="scannerView" class="view">
+        <h2>TCD Scanner</h2>
+        <div class="warning">⚠️ Ensure all Patient PII is cropped out before uploading.</div>
+        
+        <label for="imageInput" class="file-upload-label">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style="width: 40px; height: 40px; color: var(--text-muted); margin-bottom: 10px;">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path>
+          </svg>
+          <div style="font-size: 14px; color: var(--text-muted);"><strong>Tap to select</strong> or drag image here</div>
+        </label>
+        <input type="file" id="imageInput" accept="image/png, image/jpeg" onchange="updateFileName()">
+        <div id="fileNameDisplay" style="text-align:center; font-size:13px; color:var(--primary); font-weight:600; margin-bottom: 10px;"></div>
+
+        <button id="uploadBtn" onclick="uploadImage()">Scan and Extract Data</button>
+        
+        <div class="action-row">
+          <div id="status" style="flex-grow: 1; text-align: left;"></div>
+          
+          <button id="downloadBtn" class="icon-btn" onclick="downloadJSON()" title="Download Cleaned JSON">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+            </svg>
+          </button>
+        </div>
+
+        <div class="chart-container" id="chartContainer">
+          <h3 style="font-size: 16px; margin-bottom: 10px; text-align: center;">Vessel Trend (Mean Velocities)</h3>
+          <canvas id="trendChart"></canvas>
+        </div>
+
+      </div>
     </div>
 
     <script>
-      // Your Apps Script URL
-      const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxvcxPp0i0dmF3U6tqNxfoa_qvCu1KRhaRGu0CLEjCSjQ6pSgwgqwDbXOcCDWmncj7y3w/exec';
+      // ================= STATE & CONFIG =================
+      // WARNING: Make sure you replace this with your latest Deployment URL ending in /exec
+      const GAS_OCR_WEB_APP = 'https://script.google.com/macros/s/AKfycbxvcxPp0i0dmF3U6tqNxfoa_qvCu1KRhaRGu0CLEjCSjQ6pSgwgqwDbXOcCDWmncj7y3w/exec';
+      
+      let sessionToken = null;
+      let currentJsonData = null;
+      let trendChartInstance = null;
 
-      let currentJsonData = "";
+      // ================= UI NAVIGATION =================
+      function switchView(viewId) {
+        document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+        document.getElementById(viewId).classList.add('active');
+        // Clear old statuses
+        document.getElementById('loginStatus').innerText = '';
+        document.getElementById('regStatus').innerText = '';
+        document.getElementById('resStatus').innerText = '';
+      }
 
-      // Function to show the file name when selected
+      // ================= AUTHENTICATION =================
+      function handleLogin() {
+        const user = document.getElementById('loginUser').value;
+        const pass = document.getElementById('loginPass').value;
+        const domain = document.getElementById('loginDomain').value;
+        const btn = document.getElementById('btnLogin');
+        const status = document.getElementById('loginStatus');
+
+        btn.disabled = true;
+        status.innerText = "Authenticating...";
+        status.style.color = "var(--text-muted)";
+
+        google.script.run.withSuccessHandler(res => {
+          btn.disabled = false;
+          if (res.success) {
+            sessionToken = res.token; // Save the secure token!
+            switchView('scannerView');
+          } else {
+            status.innerText = res.message;
+            status.style.color = "red";
+          }
+        }).withFailureHandler(err => {
+          btn.disabled = false;
+          status.innerText = "Server Error. Try again.";
+          status.style.color = "red";
+        }).apiLogin(user, pass, domain);
+      }
+
+      // ================= REGISTRATION =================
+      function handleRegisterInitiate() {
+        const name = document.getElementById('regName').value;
+        const user = document.getElementById('regUser').value;
+        const email = document.getElementById('regEmail').value;
+        const pass = document.getElementById('regPass').value;
+        const domain = document.getElementById('regDomain').value;
+        const status = document.getElementById('regStatus');
+
+        status.innerText = "Sending verification code...";
+        google.script.run.withSuccessHandler(res => {
+          if (res.success) {
+            document.getElementById('regStep1').style.display = 'none';
+            document.getElementById('regStep2').style.display = 'block';
+            status.innerText = "Code sent to email.";
+          } else {
+            status.innerText = res.message;
+          }
+        }).apiInitiateRegistration(name, user, email, pass, domain, "User");
+      }
+
+      function handleRegisterComplete() {
+        const email = document.getElementById('regEmail').value;
+        const otp = document.getElementById('regOtp').value;
+        const status = document.getElementById('regStatus');
+
+        status.innerText = "Verifying...";
+        google.script.run.withSuccessHandler(res => {
+          if (res.success) {
+            alert("Account created successfully! Please log in.");
+            switchView('loginView');
+          } else {
+            status.innerText = res.message;
+          }
+        }).apiCompleteRegistration(email, otp);
+      }
+
+      // ================= PASSWORD RESET =================
+      function handleSendReset() {
+        const email = document.getElementById('resEmail').value;
+        const status = document.getElementById('resStatus');
+        status.innerText = "Sending reset code...";
+        
+        google.script.run.withSuccessHandler(res => {
+          if (res.success) {
+            document.getElementById('resStep1').style.display = 'none';
+            document.getElementById('resStep2').style.display = 'block';
+            status.innerText = "Reset code sent.";
+          } else {
+            status.innerText = res.message;
+          }
+        }).apiSendResetCode(email);
+      }
+
+      function handleResetComplete() {
+        const email = document.getElementById('resEmail').value;
+        const code = document.getElementById('resCode').value;
+        const pass = document.getElementById('resPass').value;
+        const status = document.getElementById('resStatus');
+
+        status.innerText = "Updating password...";
+        google.script.run.withSuccessHandler(res => {
+          if (res.success) {
+            alert("Password updated successfully! Please log in.");
+            switchView('loginView');
+          } else {
+            status.innerText = res.message;
+          }
+        }).apiVerifyAndResetPassword(email, code, pass);
+      }
+
+      // ================= SCANNER & UPLOAD LOGIC =================
       function updateFileName() {
         const fileInput = document.getElementById('imageInput');
         const fileNameDisplay = document.getElementById('fileNameDisplay');
         const statusDiv = document.getElementById('status');
         
-        // Reset status
         statusDiv.innerText = "";
-        statusDiv.className = "";
         document.getElementById('downloadBtn').style.display = 'none';
+        document.getElementById('chartContainer').style.display = 'none';
 
         if (fileInput.files.length > 0) {
           fileNameDisplay.innerText = "Selected: " + fileInput.files[0].name;
@@ -224,7 +346,6 @@
         const fileInput = document.getElementById('imageInput');
         const statusDiv = document.getElementById('status');
         const btn = document.getElementById('uploadBtn');
-        const downloadBtn = document.getElementById('downloadBtn');
 
         if (fileInput.files.length === 0) {
           statusDiv.innerText = "Please select an image first.";
@@ -235,38 +356,49 @@
         const file = fileInput.files[0];
         const reader = new FileReader();
 
-        statusDiv.innerText = "Scanning... This usually takes 5-10 seconds.";
+        statusDiv.innerText = "Scanning & Analyzing Data...";
         statusDiv.className = "";
         btn.disabled = true;
-        downloadBtn.style.display = 'none';
 
         reader.onload = async function(e) {
-          const base64Data = e.target.result;
-          const mimeType = file.type;
-
           try {
-            const response = await fetch(GAS_WEB_APP_URL, {
+            // Send to the doPost() endpoint for Gemini OCR
+            const response = await fetch(GAS_OCR_WEB_APP, {
               method: 'POST',
-              headers: {
-                'Content-Type': 'text/plain;charset=utf-8',
-              },
-              body: JSON.stringify({ base64: base64Data, mimeType: mimeType })
+              body: JSON.stringify({ base64: e.target.result, mimeType: file.type })
             });
 
             const result = await response.json();
 
             if (result.status === 'success') {
-              // Now showing the extracted HN Number on success
-              statusDiv.innerText = "Success! Saved HN: " + (result.hnNumber || "Unknown");
-              statusDiv.className = "status-success";
-              currentJsonData = JSON.stringify(result.data, null, 2);
-              downloadBtn.style.display = 'block';
+                
+                // 1. Validation Check: Does it have TCD vessels?
+                if (!isValidTCDData(result.data)) {
+                    statusDiv.innerText = "Error: No valid TCD vessels detected in image.";
+                    statusDiv.className = "status-error";
+                    btn.disabled = false;
+                    return;
+                }
+
+                // 2. Process Data: IQR Math & Clean Means
+                const processedData = processVesselData(result.data);
+                
+                statusDiv.innerText = "Success! Saved HN: " + (result.hnNumber || "Unknown");
+                statusDiv.className = "status-success";
+                
+                // Prepare JSON for download
+                currentJsonData = JSON.stringify(processedData, null, 2);
+                document.getElementById('downloadBtn').style.display = 'block';
+
+                // 3. Render Chart
+                fetchHistoricalAndPlot(result.hnNumber, processedData);
+
             } else {
               statusDiv.innerText = "Error: " + result.message;
               statusDiv.className = "status-error";
             }
           } catch (error) {
-            statusDiv.innerText = "Network Error: Could not connect to server.";
+            statusDiv.innerText = "Network Error during processing.";
             statusDiv.className = "status-error";
           } finally {
             btn.disabled = false;
@@ -282,12 +414,162 @@
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = "TCD_Exam_Data.json";
+        a.download = "TCD_Cleaned_Data.json";
         document.body.appendChild(a);
         a.click();
-        document.body.removeChild(a);
         URL.revokeObjectURL(url);
       }
+
+      // ================= DATA VALIDATION & MATH =================
+      
+      function isValidTCDData(dataArray) {
+        if (!Array.isArray(dataArray) || dataArray.length === 0) return false;
+        
+        // Stringify and look for standard TCD terminology
+        const dataStr = JSON.stringify(dataArray).toUpperCase();
+        const tcdKeywords = ["MCA", "ACA", "PCA", "BA", "VA", "ICA", "VESSEL", "DEPTH", "VELOCITY"];
+        
+        const matchCount = tcdKeywords.filter(kw => dataStr.includes(kw)).length;
+        // Require at least 2 matching TCD terms to be considered a valid scan
+        return matchCount >= 2;
+      }
+
+      function calculateCleanMean(values) {
+        if (values.length === 0) return null;
+        if (values.length === 1) return values[0];
+
+        // Sort ascending for quartiles
+        values.sort((a, b) => a - b);
+        
+        const q1 = values[Math.floor((values.length / 4))];
+        const q3 = values[Math.ceil((values.length * (3 / 4))) - 1];
+        const iqr = q3 - q1;
+        
+        // Boundaries
+        const lowerBound = q1 - 1.5 * iqr;
+        const upperBound = q3 + 1.5 * iqr;
+        
+        // Filter out extreme values
+        const validValues = values.filter(x => x >= lowerBound && x <= upperBound);
+        
+        if (validValues.length === 0) return null;
+        const sum = validValues.reduce((a, b) => a + b, 0);
+        return parseFloat((sum / validValues.length).toFixed(2));
+      }
+
+      function processVesselData(rawData) {
+        const vesselGroups = {};
+        const captureTime = new Date().toISOString();
+
+        rawData.forEach(row => {
+            // Find keys that likely represent Name and Velocity
+            const rowKeys = Object.keys(row);
+            const nameKey = rowKeys.find(k => k.toLowerCase().includes('vessel') || k.toLowerCase().includes('name') || k.toLowerCase().includes('artery'));
+            const valKey = rowKeys.find(k => k.toLowerCase().includes('mean') || k.toLowerCase().includes('vel') || k.toLowerCase().includes('cm/s'));
+
+            if (nameKey && valKey) {
+                let vName = String(row[nameKey]).toUpperCase().trim().replace(/\s+/g, ''); // "R MCA" -> "RMCA"
+                let vVal = parseFloat(row[valKey]);
+
+                if (!isNaN(vVal)) {
+                    if (!vesselGroups[vName]) vesselGroups[vName] = [];
+                    vesselGroups[vName].push(vVal);
+                }
+            }
+        });
+
+        const finalResults = {
+            captureTime: captureTime,
+            vessels: {}
+        };
+
+        for (const [vessel, values] of Object.entries(vesselGroups)) {
+            finalResults.vessels[vessel] = calculateCleanMean(values);
+        }
+
+        return finalResults;
+      }
+
+      // ================= CHARTING (REAL DB CONNECTION) =================
+      function fetchHistoricalAndPlot(hnNumber, newCleanData) {
+        const chartDiv = document.getElementById('chartContainer');
+        chartDiv.style.display = 'block';
+        
+        const ctx = document.getElementById('trendChart').getContext('2d');
+        if (trendChartInstance) { trendChartInstance.destroy(); }
+        
+        // Call backend to get historical raw data
+        google.script.run.withSuccessHandler(res => {
+          if (!res.success) {
+            console.error("Chart Error:", res.message);
+            return;
+          }
+
+          const labels = [];
+          const mcaTrend = [];
+          const acaTrend = [];
+
+          // Process historical data through the exact same math cleaner
+          res.data.forEach(record => {
+            const cleanHistory = processVesselData(record.rawData);
+            labels.push(record.date);
+            
+            // Extract the specific vessels (fallback to null if they weren't in that scan)
+            mcaTrend.push(cleanHistory.vessels['RMCA'] || cleanHistory.vessels['MCA'] || null);
+            acaTrend.push(cleanHistory.vessels['RACA'] || cleanHistory.vessels['ACA'] || null);
+          });
+
+          // Append the NEW scan data we just processed
+          labels.push("Today (New)");
+          mcaTrend.push(newCleanData.vessels['RMCA'] || newCleanData.vessels['MCA'] || null);
+          acaTrend.push(newCleanData.vessels['RACA'] || newCleanData.vessels['ACA'] || null);
+
+          // Render Chart
+          trendChartInstance = new Chart(ctx, {
+            type: 'line',
+            data: {
+              labels: labels,
+              datasets: [
+                {
+                  label: 'MCA Mean Velocity',
+                  data: mcaTrend,
+                  borderColor: 'rgb(79, 70, 229)',
+                  backgroundColor: 'rgba(79, 70, 229, 0.1)',
+                  tension: 0.3,
+                  spanGaps: true // Connects lines even if data is missing for a date
+                },
+                {
+                  label: 'ACA Mean Velocity',
+                  data: acaTrend,
+                  borderColor: 'rgb(16, 185, 129)',
+                  backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                  tension: 0.3,
+                  spanGaps: true
+                }
+              ]
+            },
+            options: {
+              responsive: true,
+              plugins: {
+                title: {
+                  display: true,
+                  text: `Historical Trend for HN: ${hnNumber}`
+                }
+              },
+              scales: {
+                y: { 
+                  beginAtZero: false, 
+                  title: { display: true, text: 'Velocity (cm/s)' } 
+                }
+              }
+            }
+          });
+
+        }).withFailureHandler(err => {
+          console.error("Failed to fetch historical data:", err);
+        }).apiGetHistoricalTCD(sessionToken, hnNumber);
+      }
+
     </script>
   </body>
 </html>
